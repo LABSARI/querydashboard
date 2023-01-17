@@ -27,10 +27,11 @@ MiDQueriesHolder >> DCRServices [
 
 	<query>
 	^ DQueryResult new
+		  browsers: { MiArchitecturalMapBrowser };
 		  name: 'Les services DCR.';
 		  group: 'Services DCR';
-		  description:
-			  'Ces services sont des classes proposant des (sous)services aux clients utilisant le mécanisme de configuration impliquant les attributs de la classe AppServiceUID.';
+		  "description:
+			  'Ces services sont des classes proposant des (sous)services aux clients utilisant le mécanisme de configuration impliquant les attributs de la classe AppServiceUID.';"
 		  queryBlock: [ 
 			  | m |
 			  m := entryPointService methods detect: [ :m1 | 
@@ -52,8 +53,8 @@ MiDQueriesHolder >> DTOClasses [
 	^ DQueryResult new
 		  name: 'Les classes qui héritent de BaseModelData.';
 		  group: 'Modèles de données';
-		  description:
-			  'Objets de transfert de données (DTO) utilisés notamment pour le renvoie de résultats des services.';
+		  "description:
+			  'Objets de transfert de données (DTO) utilisés notamment pour le renvoie de résultats des services.';"
 		  queryBlock: [ 
 			  | bmds |
 			  bmds := ((FQStringQuery
@@ -75,8 +76,8 @@ MiDQueriesHolder >> DTOClassesUsedOnlyInClientSide [
 		  name:
 			  'Les classes qui héritent de BaseModelData utilisées uniquement coté client.';
 		  group: 'Modèles de données';
-		  description:
-			  'Ce sont des modèles utilisées par des clients pour stocker des données nécessaires au fonctionnement d''un ou plusieurs clients.';
+		  "description:
+			  'Ce sont des modèles utilisées par des clients pour stocker des données nécessaires au fonctionnement d''un ou plusieurs clients.';"
 		  queryBlock: [ 
 			  self DTOClasses result select: [ :bmd | 
 					  bmd incomingReferences notEmpty and: [ 
@@ -113,6 +114,21 @@ MiDQueriesHolder >> DTODeadClasses [
 		  name: 'Les classes non utilisées qui héritent de BaseModelData.';
 		  group: 'Modèles de données';
 		  queryBlock: [ self DTOClasses result select: #isDead ];
+		  yourself
+]
+
+{ #category : #queries }
+MiDQueriesHolder >> GWTGenericService [
+
+	"Les services GWT."
+
+	<query>
+	^ DQueryResult new
+			browsers: { MiNewVisuBrowser };
+		  name: 'Generic service.';
+		  group: 'Services GWT';
+		  queryBlock: [ 
+			  self GWTServices result select: [ :s | s name ='GenericService' ] ];
 		  yourself
 ]
 
@@ -169,6 +185,7 @@ MiDQueriesHolder >> GWTServices [
 
 	<query>
 	^ DQueryResult new
+			browsers: { MiSystemComplexityBrowser. MiNewVisuBrowser };
 		  name: 'Les services GWT.';
 		  group: 'Services GWT';
 		  queryBlock: [ 
@@ -238,6 +255,21 @@ MiDQueriesHolder >> appServiceUIDSecondaryAttributes [
 					  (a accessors
 						   reject: [ :acc | acc mooseName includesSubstring: 'client' ]
 						   thenCollect: [ :acc | self rootClass: acc ]) asSet size = 1 ] ];
+		  yourself
+]
+
+{ #category : #queries }
+MiDQueriesHolder >> appServiceUIDSecondaryAttributesGroupedByService [
+
+	<query>
+	^ DQueryResult new
+		  name:
+			  'Les attributs secondaires de AppServiceUID, groupés par service.';
+		  group: 'AppServiceUID';
+		  queryBlock: [ 
+			  (self appServiceUIDSecondaryAttributes result groupedBy: [ :a | 
+					   (a accessors collect: [ :acc | self rootClass: acc ]) detect: [ 
+							   :c | c ~= self appServiceUID ] ]) associations ];
 		  yourself
 ]
 

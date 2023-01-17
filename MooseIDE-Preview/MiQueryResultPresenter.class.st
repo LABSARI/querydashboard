@@ -37,6 +37,9 @@ MiQueryResultPresenter >> buildButtons [
 		                   model: 'Propagate result';
 		                   size: 16;
 		                   yourself.
+	propagateButton when: RSMouseClick do: [ 
+		self owner buses do: [ :bus | 
+			bus globallySelect: queryResult result asMooseGroup ] ].
 	buttons := RSGroup withAll: { 
 			           inspectButton.
 			           propagateButton }.
@@ -49,7 +52,7 @@ MiQueryResultPresenter >> buildButtons [
 				             size: 16;
 				             model: 'Open with ' , b title;
 				             when: RSMouseClick
-				             do: [ b openOn: queryResult result ];
+				             do: [ b openOn: queryResult result asMooseGroup ];
 				             yourself.
 			buttons add: newButton ] ].
 
@@ -66,7 +69,7 @@ MiQueryResultPresenter >> buildButtons [
 	comp
 		adjustToChildren;
 		setAsFixed;
-		translateTopLeftTo: 0 @ 0.
+		translateTopLeftTo: 0 @ 0
 ]
 
 { #category : #initialization }

@@ -8,10 +8,23 @@ Class {
 	#category : #'MooseIDE-Preview-Browser'
 }
 
-{ #category : #'world menu' }
+{ #category : #accessing }
+MiPreviewBrowser class >> menuCommandOn: aBuilder [
+
+	<worldMenu>
+	^ self buildMenuItemIn: aBuilder
+]
+
+{ #category : #accessing }
 MiPreviewBrowser class >> menuItem [
 
 	^ #MiPreviewBrowser
+]
+
+{ #category : #accessing }
+MiPreviewBrowser class >> menuPriority [
+
+	^ self menuVisualizationToolsPriority + 1
 ]
 
 { #category : #'instance creation' }
@@ -21,9 +34,15 @@ MiPreviewBrowser class >> newModel [
 ]
 
 { #category : #accessing }
+MiPreviewBrowser class >> open [
+	<script>
+	super open
+]
+
+{ #category : #accessing }
 MiPreviewBrowser class >> title [
 
-	^ 'Preview Browser'
+	^ 'Queries dashboard'
 ]
 
 { #category : #testing }
@@ -124,7 +143,7 @@ MiPreviewBrowser >> updatePresenters [
 		             yourself.
 
 	groups := (results groupedBy: [ :q | q group ]) associations.
-	groups sort: [ :a :b | a key < b key ].
+	groups sort: [ :a :b | a key > b key ].
 
 	groups do: [ :g | 
 		newLayout
