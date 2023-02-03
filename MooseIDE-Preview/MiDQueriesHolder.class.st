@@ -124,11 +124,10 @@ MiDQueriesHolder >> GWTGenericService [
 
 	<query>
 	^ DQueryResult new
-			browsers: { MiNewVisuBrowser };
 		  name: 'Generic service.';
 		  group: 'Services GWT';
 		  queryBlock: [ 
-			  self GWTServices result select: [ :s | s name ='GenericService' ] ];
+			  self GWTServices result select: [ :s | s name = 'GenericService' ] ];
 		  yourself
 ]
 
@@ -185,7 +184,7 @@ MiDQueriesHolder >> GWTServices [
 
 	<query>
 	^ DQueryResult new
-			browsers: { MiSystemComplexityBrowser. MiNewVisuBrowser };
+		  browsers: { MiSystemComplexityBrowser };
 		  name: 'Les services GWT.';
 		  group: 'Services GWT';
 		  queryBlock: [ 
