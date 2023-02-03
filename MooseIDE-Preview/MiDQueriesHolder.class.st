@@ -226,7 +226,9 @@ MiDQueriesHolder >> abstractClassesWithoutAbstractPrefix [
 		  group: 'Convention de nommage';
 		  queryBlock: [ 
 			  mooseModel allModelClasses select: [ :c | 
-					  c isAbstract notNil and: [ (c name beginsWith: 'Abstract') not ] ] ];
+					  c isException not and: [ 
+							  c isAbstract notNil and: [ 
+									  (c name beginsWith: 'Abstract') not ] ] ] ];
 		  yourself
 ]
 
@@ -427,7 +429,7 @@ MiDQueriesHolder >> enumsWithoutEPrefix [
 MiDQueriesHolder >> initializeEntities [
 
 	classes := mooseModel allModelClasses reject: [ :c | 
-		           c isAnonymousClass ].
+		           c isException or: [ c isAnonymousClass ] ].
 
 	appServiceUID := ((FQStringQuery
 		                   property: #name
@@ -444,7 +446,7 @@ MiDQueriesHolder >> initializeEntities [
 		                   property: #name
 		                   comparator: #=
 		                   valueToCompare: 'RemoteService') runOn:
-		                  mooseModel allClasses) first
+		                  (mooseModel allWithType: FamixJavaInterface)) first
 ]
 
 { #category : #queries }
