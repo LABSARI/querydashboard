@@ -14,6 +14,17 @@ MiBasicQueriesHolder class >> canBeAppliedOnModel: aMooseModel [
 	^ true
 ]
 
+{ #category : #'queries - class' }
+MiBasicQueriesHolder >> abstractClassesWithoutSubclass [
+		<query>
+	^ DQueryResult new
+		  name: 'Abstract classes without subclass';
+		  group: 'Classes';
+		  queryBlock: [ 
+			  self classes select: [ :c | c isAbstract isNotNil and: [ c subInheritances isEmpty ] ] ] ;
+		  yourself
+]
+
 { #category : #accessing }
 MiBasicQueriesHolder >> classes [
 
@@ -48,11 +59,35 @@ MiBasicQueriesHolder >> classesWithANumberOfMethodsSupTo: aNumber [
 		  yourself
 ]
 
+{ #category : #'queries - class' }
+MiBasicQueriesHolder >> deadClasses [
+		<query>
+	^ DQueryResult new
+		  name: 'Dead classes';
+		  group: 'Classes';
+		  queryBlock: [ 
+			  self classes select: [ :c | (c isException not) and: [ c isAnonymousClass not and: [ (c queryIncoming: FamixTAssociation) isEmpty] ] ] ] ;
+		  yourself
+]
+
+{ #category : #initialization }
+MiBasicQueriesHolder >> initializeClasses [
+
+	| exception |
+	"If the metamodel contains exception, class exceptions are removed from collection "
+	exception := self mooseModel metamodel traits detect: [ :trait | 
+		             trait name = #TException ].
+	^ exception classUsers
+		ifEmpty: [ self mooseModel allModelClasses reject: [ :c | c isAnonymousClass ] ]
+		ifNotEmpty: [ self mooseModel allModelClasses reject: [ :c | 
+				             c isException or: [ c isAnonymousClass ] ] ].
+
+]
+
 { #category : #initialization }
 MiBasicQueriesHolder >> initializeEntities [
 
-	classes := mooseModel allModelClasses reject: [ :c | 
-		           c isException or: [ c isAnonymousClass ] ].
+	classes := self initializeClasses.
 	
 	packages := mooseModel allModelPackages .
 ]
@@ -65,6 +100,17 @@ MiBasicQueriesHolder >> leafPackages [
 		  group: 'Packages';
 		  queryBlock: [ 
 			  self packages reject: [ :p | p children anySatisfy: [ :c | c isPackage ] ] ];
+		  yourself
+]
+
+{ #category : #'queries - class' }
+MiBasicQueriesHolder >> notImplementedInterfaces [
+		<query>
+	^ DQueryResult new
+		  name: 'Not implemented interfaces';
+		  group: 'Interfaces';
+		  queryBlock: [ 
+			  self mooseModel allModelEntities select: [ :e | e isInterface and: [ e implementations isEmpty ] ] ] ;
 		  yourself
 ]
 
