@@ -3,7 +3,8 @@ Class {
 	#superclass : #MiAbstractQueriesHolder,
 	#instVars : [
 		'classes',
-		'packages'
+		'packages',
+		'enums'
 	],
 	#category : #'MooseIDE-Preview-Queries'
 }
@@ -66,8 +67,31 @@ MiBasicQueriesHolder >> deadClasses [
 		  name: 'Dead classes';
 		  group: 'Classes';
 		  queryBlock: [ 
-			  self classes select: [ :c | (c isException not) and: [ c isAnonymousClass not and: [ (c queryIncoming: FamixTAssociation) isEmpty] ] ] ] ;
+			  self classes select: [ :c | (c queryIncoming: FamixTAssociation) isEmpty] ] ;
 		  yourself
+]
+
+{ #category : #'query - enum' }
+MiBasicQueriesHolder >> enumWithMethods [
+		<query>
+	^ DQueryResult new
+		  name: 'Enumerations with methods';
+		  group: 'Enumeration';
+		  queryBlock: [ 
+			  self enums select: [ :e | e methods isNotEmpty ] ] ;
+		  yourself
+]
+
+{ #category : #accessing }
+MiBasicQueriesHolder >> enums [
+
+	^ enums
+]
+
+{ #category : #accessing }
+MiBasicQueriesHolder >> enums: anObject [
+
+	enums := anObject
 ]
 
 { #category : #initialization }
@@ -87,9 +111,21 @@ MiBasicQueriesHolder >> initializeClasses [
 { #category : #initialization }
 MiBasicQueriesHolder >> initializeEntities [
 
-	classes := self initializeClasses.
-	
+	classes := self initializeClasses .
+	enums := self initializeEnums.
 	packages := mooseModel allModelPackages .
+]
+
+{ #category : #initialization }
+MiBasicQueriesHolder >> initializeEnums [
+
+	| tEnum |
+	tEnum := self mooseModel metamodel traits detect: [ :trait | 
+		         trait name = #TEnum ].
+	^ tEnum classUsers
+		  ifEmpty: [ OrderedCollection new ]
+		  ifNotEmpty: [ 
+		  self mooseModel allEnums reject: [ :e | e isStub ] ]
 ]
 
 { #category : #'queries - packages' }
@@ -106,11 +142,15 @@ MiBasicQueriesHolder >> leafPackages [
 { #category : #'queries - class' }
 MiBasicQueriesHolder >> notImplementedInterfaces [
 		<query>
+		| tInterface |
+	tInterface := self mooseModel metamodel traits detect: [ :trait | 
+		             trait name = #TImplementable ].
 	^ DQueryResult new
 		  name: 'Not implemented interfaces';
 		  group: 'Interfaces';
 		  queryBlock: [ 
-			  self mooseModel allModelEntities select: [ :e | e isInterface and: [ e implementations isEmpty ] ] ] ;
+			tInterface classUsers ifEmpty: [ OrderedCollection new ] ifNotEmpty: 
+			  [self mooseModel allModelEntities select: [ :e | e isInterface and: [ e implementations isEmpty ] ] ] ] ;
 		  yourself
 ]
 
