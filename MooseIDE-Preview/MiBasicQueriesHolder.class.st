@@ -5,7 +5,9 @@ Class {
 		'classes',
 		'packages',
 		'enums',
-		'withEnum'
+		'withEnum',
+		'withAnnotation',
+		'methods'
 	],
 	#category : #'MooseIDE-Preview-Queries'
 }
@@ -62,6 +64,17 @@ MiBasicQueriesHolder >> classesWithANumberOfAttributesSupTo: aNumber [
 ]
 
 { #category : #'queries - class' }
+MiBasicQueriesHolder >> classesWithANumberOfLOCSupTo: aNumber [
+		<query>
+	^ DQueryResult new
+		  name: 'Classes with more than X lines of code';
+		  group: 'Classes';
+		  queryBlock: [ 
+			  self classes select: [ :c | c numberOfLinesOfCode > aNumber ] ] ;
+		  yourself
+]
+
+{ #category : #'queries - class' }
 MiBasicQueriesHolder >> classesWithANumberOfMethodsSupTo: aNumber [
 		<query>
 	^ DQueryResult new
@@ -80,6 +93,50 @@ MiBasicQueriesHolder >> deadClasses [
 		  group: 'Classes';
 		  queryBlock: [ 
 			  self classes select: [ :c | (c queryIncoming: FamixTAssociation) isEmpty] ] ;
+		  yourself
+]
+
+{ #category : #'queries - method' }
+MiBasicQueriesHolder >> deadMethods [
+
+	<query>
+	^ DQueryResult new
+		  name:
+			  'Dead methods (not invoked by any methods)';
+		  group: 'Methods';
+		  queryBlock: [ 
+			  self methods select: [ :m | (m queryIncoming: FamixTInvocation) isEmpty ] ] ;
+		  yourself
+]
+
+{ #category : #'queries - method' }
+MiBasicQueriesHolder >> deprecatedAndCalledMethods [
+
+	<query>
+	^ DQueryResult new
+		  name:
+			  'Deprecated but called methods';
+		  group: 'Methods';
+		  queryBlock: [ 
+			self withAnnotation ifTrue: [  | deprecated |
+			  deprecated := self deprecatedMethods result.
+			  deprecated select: [ :m | ((m queryIncoming: FamixTInvocation) collect: #sender)  allSatisfy: [ :s | (self deprecatedMethods result includes: s) not ]  ] ] ];
+		  yourself
+]
+
+{ #category : #'queries - method' }
+MiBasicQueriesHolder >> deprecatedMethods [
+
+	<query>
+	^ DQueryResult new
+		  name:
+			  'Deprecated methods';
+		  group: 'Methods';
+		  queryBlock: [ 
+			self withAnnotation ifTrue: [  
+			  self methods select: [ :m | 
+        m annotationInstances notEmpty
+            and: [ m annotationTypes anySatisfy: [ :a | a name = 'Deprecated' ] ] ] ] ];
 		  yourself
 ]
 
@@ -118,6 +175,21 @@ MiBasicQueriesHolder >> enums: anObject [
 ]
 
 { #category : #initialization }
+MiBasicQueriesHolder >> initializeAnnotationTypes [
+
+	| tAnnotationType |
+	tAnnotationType := self mooseModel metamodel traits detect: [ :trait | 
+		         trait name = #TAnnotationType ].
+	^ tAnnotationType classUsers 
+		ifEmpty: [
+			withAnnotation := false.
+			OrderedCollection new ] 
+		ifNotEmpty: [ 
+		  withAnnotation := true.
+		  self mooseModel allAnnotationTypes  ]
+]
+
+{ #category : #initialization }
 MiBasicQueriesHolder >> initializeClasses [
 
 	| exception |
@@ -137,6 +209,9 @@ MiBasicQueriesHolder >> initializeEntities [
 	classes := self initializeClasses .
 	enums := self initializeEnums.
 	packages := mooseModel allModelPackages .
+	methods := mooseModel allModelMethods.
+	self initializeAnnotationTypes.
+	
 ]
 
 { #category : #initialization }
@@ -165,6 +240,18 @@ MiBasicQueriesHolder >> leafPackages [
 		  yourself
 ]
 
+{ #category : #accessing }
+MiBasicQueriesHolder >> methods [
+
+	^ methods
+]
+
+{ #category : #accessing }
+MiBasicQueriesHolder >> methods: anObject [
+
+	methods := anObject
+]
+
 { #category : #'queries - method' }
 MiBasicQueriesHolder >> methodsAccessingMoreAttributesThan: aNumber [
 
@@ -174,7 +261,7 @@ MiBasicQueriesHolder >> methodsAccessingMoreAttributesThan: aNumber [
 			  'Methods with more than X accesses to Attributes or Enum Values';
 		  group: 'Methods';
 		  queryBlock: [ 
-			  (self classes flatCollect: #methods) select: [ :m | ((m accesses select: [ :a | a variable isAttribute ]) collectAsSet: #variable) size > aNumber] ];
+			  self methods select: [ :m | ((m accesses select: [ :a | a variable isAttribute ]) collectAsSet: #variable) size > aNumber] ];
 		  yourself
 ]
 
@@ -185,7 +272,7 @@ MiBasicQueriesHolder >> methodsWithACyclomaticComplexitySupTo: aNumber [
 		  name: 'Methods with a cyclomatic complexity superior to X';
 		  group: 'Methods';
 		  queryBlock: [ 
-			  (self classes flatCollect: #methods) select: [ :m | m cyclomaticComplexity > aNumber ] ] ;
+			  self methods select: [ :m | m cyclomaticComplexity > aNumber ] ] ;
 		  yourself
 ]
 
@@ -196,7 +283,7 @@ MiBasicQueriesHolder >> methodsWithANumberOfAccessesSupTo: aNumber [
 		  name: 'Methods with more than X accesses to Attributes or Enum Values';
 		  group: 'Methods';
 		  queryBlock: [ 
-			  (self classes  flatCollect: #methods) select: [ :m | (m accesses select: [ :a | a variable isAttribute or: [self withEnum and: [ a variable isEnumValue ] ] ]) size > aNumber ] ] ;
+			  self methods select: [ :m | (m accesses select: [ :a | a variable isAttribute or: [self withEnum and: [ a variable isEnumValue ] ] ]) size > aNumber ] ] ;
 		  yourself
 ]
 
@@ -247,6 +334,12 @@ MiBasicQueriesHolder >> packagesWithOneClass [
 		  queryBlock: [ 
 			  self packages select: [ :p | (p types select: #isClass) size = 1 ] ] ;
 		  yourself
+]
+
+{ #category : #accessing }
+MiBasicQueriesHolder >> withAnnotation [
+
+	^ withAnnotation
 ]
 
 { #category : #'queries - method' }
