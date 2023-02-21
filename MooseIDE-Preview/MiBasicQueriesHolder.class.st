@@ -48,7 +48,7 @@ MiBasicQueriesHolder >> classesWhoseAmethodHasACyclomaticComplexitySupTo: aNumbe
 		  name: 'Classes whose at least a method has a cyclomatic complexity superior to X';
 		  group: 'Methods';
 		  queryBlock: [ 
-			  ((self classes flatCollect: #methods) select: [ :m | m cyclomaticComplexity > aNumber ]) collect: #parentType  ] ;
+			  ((self methods) select: [ :m | m cyclomaticComplexity > aNumber ]) collect: #parentType  ] ;
 		  yourself
 ]
 
